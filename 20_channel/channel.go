@@ -3,70 +3,104 @@ package main
 import (
 	"fmt"
 	"time"
-	// "math/rand"
-	// "time"
 )
 
-// func processNum(numChan chan int){
-
-// 	for num := range numChan{
-// 	   fmt.Println("processing channel", num)
-// 	   time.Sleep(time.Second)
+// send
+// func processNum(numChan chan int) {
+// 	for num := range numChan {
+// 		fmt.Println("processing number", num)
+// 		time.Sleep(time.Second)
 // 	}
 
 // }
 
-// func sum(result chan int,num1 int,num2 int){
-// 	add := num1 + num2
-// 	result <- add
+// receive
+// func sum(result chan int, num1 int, num2 int) {
+// 	numResult := num1 + num2
+// 	result <- numResult
 // }
 
-func emailSender(emailChan chan string,done chan bool){
-    defer func(){done <- true}()
-	for email := range emailChan{
-		fmt.Println("processing email",email)
+// goroutine synchronizer
+// func task(done chan bool) {
+// 	defer func() { done <- true }()
+
+// 	fmt.Println("processing...")
+// }
+
+func emailSender(emailChan <-chan string, done chan<- bool) {
+	defer func() { done <- true }()
+
+	for email := range emailChan {
+		fmt.Println("sending email to", email)
 		time.Sleep(time.Second)
 	}
 }
 
+func main() {
+	chan1 := make(chan int)
+	chan2 := make(chan string)
 
-func main(){
+	go func() {
+		chan1 <- 10
+	}()
 
-   emailChan := make(chan string, 100)
-   done := make(chan bool)
+	go func() {
+		chan2 <- "pong"
+	}()
 
-   go emailSender(emailChan,done)
+	for i := 0; i < 2; i++ {
+		select {
+		case chan1Val := <-chan1:
+			fmt.Println("received data from chan1", chan1Val)
+		case chan2Val := <-chan2:
+			fmt.Println("received data from chan2", chan2Val)
+		}
+	}
 
-   for i:=0;i<10;i++{
-	 emailChan <- fmt.Sprintf("%d@gmail.com",i)
-   }
-   
-   fmt.Println("done sending....")
-   close(emailChan)
-   <-done
-   
+	// emailChan := make(chan string, 100)
+	// done := make(chan bool)
 
+	// go emailSender(emailChan, done)
 
+	// for i := 0; i < 5; i++ {
+	// 	emailChan <- fmt.Sprintf("%d@gmail.com", i)
+	// }
 
-    // result := make(chan int)
-    // go sum(result,4,6)
-	// ans := <- result
-	// fmt.Println(ans)
+	// fmt.Println("done sending.")
 
+	// this is important
+	// close(emailChan)
+	// <-done
+	// emailChan <- "1@example.com"
+	// emailChan <- "2@example.com"
 
+	// fmt.Println(<-emailChan)
+	// fmt.Println(<-emailChan)
 
-    // numChan := make(chan int)
+	// done := make(chan bool)
+	// go task(done)
+
+	// <-done // block
+
+	// result := make(chan int)
+	// go sum(result, 4, 5)
+	// res := <-result // blocking
+
+	// fmt.Println(res)
+	// numChan := make(chan int)
+
 	// go processNum(numChan)
 
 	// for {
 	// 	numChan <- rand.Intn(100)
 	// }
 
-	// messageChannel := make(chan string)
+	// messageChan := make(chan string)
 
-	// messageChannel  <- "ping"
+	// messageChan <- "ping" // blocking
 
-	// msg := <- messageChannel
+	// msg := <-messageChan
 
 	// fmt.Println(msg)
+
 }
